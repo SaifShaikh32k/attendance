@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dashboard — Warehouse Tracker</title>
+<meta name="theme-color" content="#0B2545">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="offline-banner" id="offlineBanner"><span class="material-icons" style="font-size:16px">cloud_off</span> Offline — actions queued, will sync when back online</div>
+
+<div class="app-shell">
+  <div class="topbar">
+    <div class="brand"><span class="material-icons">warehouse</span> Warehouse Tracker</div>
+    <button class="icon-btn" id="themeToggle" title="Toggle dark mode"><span class="material-icons">dark_mode</span></button>
+  </div>
+
+  <div class="content">
+
+    <!-- Identity + live clock -->
+    <div class="card row-between">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="avatar-circle" id="avatarInitial">?</div>
+        <div>
+          <div style="font-weight:700;font-size:16px;" id="employeeName">Loading…</div>
+          <div class="muted" id="currentDate">—</div>
+        </div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-family:var(--font-display);font-size:20px;font-weight:700;color:var(--navy);" id="currentTime">--:--</div>
+        <span class="badge badge-info" id="statusBadge"><span class="badge-dot"></span> —</span>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="value" id="workingHours">0h 0m</div>
+        <div class="label">Working hours</div>
+      </div>
+      <div class="stat-card">
+        <div class="value" id="completedTasks">0/0</div>
+        <div class="label">Tasks completed today</div>
+      </div>
+      <div class="stat-card">
+        <div class="value" id="gpsStatusValue" style="font-size:15px;">Locating…</div>
+        <div class="label">GPS status</div>
+      </div>
+      <div class="stat-card">
+        <div class="value" id="loginTimeValue" style="font-size:18px;">--:--</div>
+        <div class="label">Login time</div>
+      </div>
+    </div>
+
+    <!-- Current task -->
+    <div class="card" id="currentTaskCard" style="display:none;">
+      <div class="card-title"><span class="material-icons" style="font-size:16px;">task_alt</span> Active Task</div>
+      <div id="currentTaskName" style="font-weight:600;"></div>
+      <div class="muted" id="currentTaskDesc"></div>
+    </div>
+
+    <!-- Actions -->
+    <div class="card">
+      <div class="card-title"><span class="material-icons" style="font-size:16px;">bolt</span> Quick Actions</div>
+      <div class="action-grid">
+        <div class="action-btn success" id="btnStartTask"><span class="material-icons">play_circle</span><span class="label">Start Task</span></div>
+        <div class="action-btn" id="btnCompleteTask"><span class="material-icons">check_circle</span><span class="label">Complete Task</span></div>
+        <div class="action-btn" id="btnSnapshot"><span class="material-icons">photo_camera</span><span class="label">Upload Snapshot</span></div>
+        <div class="action-btn" id="btnStatus"><span class="material-icons">sync_alt</span><span class="label">Update Status</span></div>
+        <div class="action-btn warning" id="btnLunchOut"><span class="material-icons">lunch_dining</span><span class="label">Lunch Out</span></div>
+        <div class="action-btn success" id="btnLunchIn"><span class="material-icons">restaurant</span><span class="label">Lunch In</span></div>
+        <div class="action-btn" id="btnHistory"><span class="material-icons">history</span><span class="label">History</span></div>
+        <div class="action-btn danger" id="btnLogout"><span class="material-icons">logout</span><span class="label">Logout</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===================== MODAL: Start Task ===================== -->
+<div class="overlay" id="modalStartTask">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header"><h3>Start New Task</h3><button class="icon-btn" data-close="modalStartTask"><span class="material-icons">close</span></button></div>
+    <div class="field">
+      <label>Task Type</label>
+      <select id="taskType">
+        <option>Picking</option><option>Packing</option><option>Inventory Counting</option>
+        <option>Loading</option><option>Unloading</option><option>Quality Check</option><option>Other</option>
+      </select>
+    </div>
+    <div class="field"><label>Task Name</label><input type="text" id="taskName" placeholder="e.g. Pick order #4521"></div>
+    <div class="field"><label>Description</label><textarea id="taskDesc" placeholder="Details about this task…"></textarea></div>
+    <div class="field">
+      <label>Photo (optional)</label>
+      <div class="camera-box" id="taskCameraBox" style="aspect-ratio:16/9;">
+        <video id="taskVideo" autoplay playsinline muted style="display:none;"></video>
+        <img id="taskPhotoPreview" style="display:none;">
+        <div class="placeholder" id="taskCameraPlaceholder"><span class="material-icons" style="font-size:28px;">photo_camera</span></div>
+      </div>
+      <div class="camera-controls">
+        <button type="button" class="btn btn-outline btn-sm" id="taskStartCam" style="flex:1;">Open Camera</button>
+        <button type="button" class="btn btn-primary btn-sm" id="taskCapture" style="flex:1;" disabled>Capture</button>
+      </div>
+    </div>
+    <div class="gps-status-row ok"><span class="material-icons">gps_fixed</span> <span id="taskGpsText">GPS will be captured on submit</span></div>
+    <button class="btn btn-primary" id="submitStartTask" style="margin-top:8px;"><span class="material-icons">play_circle</span> Start Task</button>
+  </div>
+</div>
+
+<!-- ===================== MODAL: Complete Task ===================== -->
+<div class="overlay" id="modalCompleteTask">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header"><h3>Complete Task</h3><button class="icon-btn" data-close="modalCompleteTask"><span class="material-icons">close</span></button></div>
+    <div id="noActiveTaskMsg" class="muted" style="display:none;">No active task. Start one first.</div>
+    <div id="completeTaskForm">
+      <div class="field"><label>Remarks</label><textarea id="completeRemarks" placeholder="Any notes about completion…"></textarea></div>
+      <div class="field">
+        <label>Completion Photo (optional)</label>
+        <div class="camera-box" id="completeCameraBox" style="aspect-ratio:16/9;">
+          <video id="completeVideo" autoplay playsinline muted style="display:none;"></video>
+          <img id="completePhotoPreview" style="display:none;">
+          <div class="placeholder" id="completeCameraPlaceholder"><span class="material-icons" style="font-size:28px;">photo_camera</span></div>
+        </div>
+        <div class="camera-controls">
+          <button type="button" class="btn btn-outline btn-sm" id="completeStartCam" style="flex:1;">Open Camera</button>
+          <button type="button" class="btn btn-primary btn-sm" id="completeCapture" style="flex:1;" disabled>Capture</button>
+        </div>
+      </div>
+      <button class="btn btn-success" id="submitCompleteTask"><span class="material-icons">check_circle</span> Mark Complete</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: Snapshot ===================== -->
+<div class="overlay" id="modalSnapshot">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header"><h3>Upload Snapshot</h3><button class="icon-btn" data-close="modalSnapshot"><span class="material-icons">close</span></button></div>
+    <div class="camera-box" id="snapCameraBox">
+      <video id="snapVideo" autoplay playsinline muted style="display:none;"></video>
+      <img id="snapPhotoPreview" style="display:none;">
+      <div class="placeholder" id="snapCameraPlaceholder"><span class="material-icons" style="font-size:28px;">photo_camera</span></div>
+    </div>
+    <div class="camera-controls">
+      <button type="button" class="btn btn-outline btn-sm" id="snapStartCam" style="flex:1;">Open Camera</button>
+      <button type="button" class="btn btn-primary btn-sm" id="snapCapture" style="flex:1;" disabled>Capture</button>
+    </div>
+    <button class="btn btn-primary" id="submitSnapshot" style="margin-top:10px;" disabled><span class="material-icons">cloud_upload</span> Upload</button>
+  </div>
+</div>
+
+<!-- ===================== MODAL: Status ===================== -->
+<div class="overlay" id="modalStatus">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header"><h3>Update Status</h3><button class="icon-btn" data-close="modalStatus"><span class="material-icons">close</span></button></div>
+    <div id="statusOptionsList" style="display:flex;flex-direction:column;gap:8px;"></div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: History ===================== -->
+<div class="overlay" id="modalHistory">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header"><h3>My History</h3><button class="icon-btn" data-close="modalHistory"><span class="material-icons">close</span></button></div>
+    <div class="btn-grid" style="margin-bottom:14px;">
+      <button class="btn btn-outline btn-sm" data-htab="attendance">Attendance</button>
+      <button class="btn btn-outline btn-sm" data-htab="tasks">Tasks</button>
+    </div>
+    <div id="historyContent"><div class="skeleton" style="height:60px;"></div></div>
+  </div>
+</div>
+
+<div id="toast-root"></div>
+
+<script src="js/config.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/api.js"></script>
+<script src="js/dashboard.js"></script>
+</body>
+</html>

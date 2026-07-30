@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Admin — Warehouse Tracker</title>
+<meta name="theme-color" content="#0B2545">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="admin-shell" style="max-width:100%;">
+  <div class="admin-grid">
+
+    <aside class="admin-sidebar">
+      <div class="brand"><span class="material-icons" style="color:var(--blue-light);vertical-align:middle;">warehouse</span> Warehouse Tracker</div>
+      <nav class="admin-nav">
+        <button data-view="live" class="active"><span class="material-icons">sensors</span> Live Employees</button>
+        <button data-view="employees"><span class="material-icons">badge</span> Employee List</button>
+        <button data-view="attendance"><span class="material-icons">event_available</span> Attendance</button>
+        <button data-view="movement"><span class="material-icons">map</span> Movement History</button>
+        <button data-view="tasks"><span class="material-icons">assignment</span> Task Progress</button>
+        <button data-view="kpis"><span class="material-icons">bar_chart</span> Performance &amp; KPIs</button>
+        <button data-view="reports"><span class="material-icons">description</span> Reports</button>
+      </nav>
+      <div style="margin-top:20px;">
+        <button class="btn btn-outline btn-sm" id="themeToggle" style="width:100%;"><span class="material-icons">dark_mode</span> Dark Mode</button>
+        <button class="btn btn-outline btn-sm" id="logoutBtn" style="width:100%;margin-top:8px;color:#fff;border-color:rgba(255,255,255,0.3);background:transparent;"><span class="material-icons">logout</span> Logout</button>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+      <div class="admin-topbar">
+        <div>
+          <h2 style="margin:0;" id="viewTitle">Live Employees</h2>
+          <p class="muted" style="margin:2px 0 0;" id="adminWelcome">—</p>
+        </div>
+      </div>
+
+      <div class="kpi-strip" id="kpiStrip"></div>
+
+      <!-- LIVE VIEW -->
+      <section data-section="live">
+        <div class="card">
+          <div class="card-title">Employees currently on shift</div>
+          <div class="table-wrap"><table class="data-table" id="liveTable">
+            <thead><tr><th>Employee</th><th>Department</th><th>Status</th><th>Login Time</th><th>Location</th><th>Last Ping</th></tr></thead>
+            <tbody></tbody>
+          </table></div>
+        </div>
+      </section>
+
+      <!-- EMPLOYEES VIEW -->
+      <section data-section="employees" style="display:none;">
+        <div class="card">
+          <div class="row-between">
+            <div class="card-title" style="margin:0;">All Employees</div>
+            <button class="btn btn-primary btn-sm" id="addEmployeeBtn"><span class="material-icons">person_add</span> Add Employee</button>
+          </div>
+          <div class="search-bar"><input type="text" id="empSearch" placeholder="Search by name or ID…"></div>
+          <div class="table-wrap"><table class="data-table" id="employeesTable">
+            <thead><tr><th>Employee ID</th><th>Name</th><th>Role</th><th>Department</th><th>Shift</th><th>Status</th></tr></thead>
+            <tbody></tbody>
+          </table></div>
+        </div>
+      </section>
+
+      <!-- ATTENDANCE VIEW -->
+      <section data-section="attendance" style="display:none;">
+        <div class="card">
+          <div class="card-title">Attendance Records</div>
+          <div class="search-bar">
+            <input type="text" id="attEmpFilter" placeholder="Employee ID">
+            <input type="date" id="attDateFilter">
+            <button class="btn btn-outline btn-sm" id="attFilterBtn">Filter</button>
+          </div>
+          <div class="table-wrap"><table class="data-table" id="attendanceTable">
+            <thead><tr><th>Employee</th><th>Login</th><th>Logout</th><th>Hours</th><th>Status</th><th>Selfie</th><th>Device</th><th>Battery</th></tr></thead>
+            <tbody></tbody>
+          </table></div>
+        </div>
+      </section>
+
+      <!-- MOVEMENT VIEW -->
+      <section data-section="movement" style="display:none;">
+        <div class="card">
+          <div class="card-title">Movement History</div>
+          <div class="search-bar">
+            <input type="text" id="movEmpFilter" placeholder="Employee ID">
+            <input type="date" id="movDateFilter">
+            <button class="btn btn-outline btn-sm" id="movFilterBtn">Filter</button>
+          </div>
+          <div class="table-wrap"><table class="data-table" id="movementTable">
+            <thead><tr><th>Employee</th><th>Latitude</th><th>Longitude</th><th>Accuracy</th><th>Speed</th><th>Timestamp</th></tr></thead>
+            <tbody></tbody>
+          </table></div>
+        </div>
+      </section>
+
+      <!-- TASKS VIEW -->
+      <section data-section="tasks" style="display:none;">
+        <div class="card">
+          <div class="card-title">Task Progress</div>
+          <div class="search-bar">
+            <input type="text" id="taskEmpFilter" placeholder="Employee ID">
+            <input type="date" id="taskDateFilter">
+            <button class="btn btn-outline btn-sm" id="taskFilterBtn">Filter</button>
+          </div>
+          <div class="table-wrap"><table class="data-table" id="tasksTable">
+            <thead><tr><th>Employee</th><th>Type</th><th>Task</th><th>Start</th><th>End</th><th>Status</th><th>Photo</th></tr></thead>
+            <tbody></tbody>
+          </table></div>
+        </div>
+      </section>
+
+      <!-- KPI VIEW -->
+      <section data-section="kpis" style="display:none;">
+        <div class="card">
+          <div class="card-title">Task Completion — last 7 data points</div>
+          <canvas id="kpiChart" height="90"></canvas>
+        </div>
+      </section>
+
+      <!-- REPORTS VIEW -->
+      <section data-section="reports" style="display:none;">
+        <div class="card">
+          <div class="card-title">Generate Report</div>
+          <div class="field">
+            <label>Report Type</label>
+            <select id="reportType">
+              <option value="daily">Daily Report</option>
+              <option value="weekly">Weekly Report</option>
+              <option value="monthly">Monthly Report</option>
+              <option value="attendance">Attendance Report</option>
+              <option value="task">Task Report</option>
+              <option value="productivity">Productivity Report</option>
+            </select>
+          </div>
+          <div class="btn-grid">
+            <button class="btn btn-outline" id="genExcelBtn"><span class="material-icons">grid_on</span> Download Excel</button>
+            <button class="btn btn-outline" id="genPdfBtn"><span class="material-icons">picture_as_pdf</span> Download PDF</button>
+          </div>
+          <p class="muted" id="reportStatus" style="margin-top:10px;"></p>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- ADD EMPLOYEE MODAL -->
+<div class="overlay" id="modalAddEmployee">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header"><h3>Add Employee</h3><button class="icon-btn" data-close="modalAddEmployee"><span class="material-icons">close</span></button></div>
+    <div class="field"><label>Employee ID</label><input type="text" id="newEmpId"></div>
+    <div class="field"><label>Name</label><input type="text" id="newEmpName"></div>
+    <div class="field"><label>Temporary Password</label><input type="text" id="newEmpPassword"></div>
+    <div class="field"><label>Department</label><input type="text" id="newEmpDept"></div>
+    <div class="field"><label>Shift</label><input type="text" id="newEmpShift" placeholder="e.g. Morning 8AM-5PM"></div>
+    <button class="btn btn-primary" id="submitAddEmployee"><span class="material-icons">person_add</span> Add Employee</button>
+  </div>
+</div>
+
+<div id="toast-root"></div>
+
+<script src="js/config.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/api.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>
